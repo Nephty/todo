@@ -5,8 +5,6 @@ fn main() {
     let mut args: Vec<String> = env::args().collect();
     let mut dir_path: Option<String> = None;
 
-    println!("Yayy");
-    println!("{:?}", args);
     args.retain(|arg| {
         if let Some(path_str) = arg.strip_prefix("--path=") {
             dir_path = Some(path_str.to_string());
@@ -14,9 +12,6 @@ fn main() {
         }
         true
     });
-    println!("Yayy");
-    println!("{:?}", args);
-    println!("Yayy");
 
     let todo = Todo::new(dir_path).expect("Couldn't create the todo instance");
 
