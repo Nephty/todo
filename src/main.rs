@@ -2,9 +2,23 @@ use std::env;
 use todo_bin::{help, Todo};
 
 fn main() {
-    let todo = Todo::new().expect("Couldn't create the todo instance");
+    let mut args: Vec<String> = env::args().collect();
+    let mut dir_path: Option<String> = None;
 
-    let args: Vec<String> = env::args().collect();
+    println!("Yayy");
+    println!("{:?}", args);
+    args.retain(|arg| {
+        if let Some(path_str) = arg.strip_prefix("--path=") {
+            dir_path = Some(path_str.to_string());
+            return false;
+        }
+        true
+    });
+    println!("Yayy");
+    println!("{:?}", args);
+    println!("Yayy");
+
+    let todo = Todo::new(dir_path).expect("Couldn't create the todo instance");
 
     if args.len() > 1 {
         let command = &args[1];

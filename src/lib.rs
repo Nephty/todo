@@ -62,17 +62,30 @@ pub struct Todo {
 }
 
 impl Todo {
-    pub fn new() -> Result<Self, String> {
-        let todo_path: String = match env::var("TODO_PATH") {
-            Ok(t) => t,
-            Err(_) => {
-                let home = env::var("HOME").unwrap();
+    pub fn new(path: Option<String>) -> Result<Self, String> {
+        let todo_path: String = match path {
+            Some(ref p) => {
+                let path_obj = Path::new(&p);
+                if path_obj.is_dir() {
+                    format!("{}/.todo", p.clone())
+                } else {
+                    eprintln!("Error: '{}' is not a valid directory.", p);
+                    process::exit(1);
+                }
+            },
+            None => {
+                match env::var("TODO_PATH") {
+                    Ok(t) => t,
+                    Err(_) => {
+                        let home = env::var("HOME").unwrap();
 
-                // Look for a legacy TODO file path
-                let legacy_todo = format!("{}/TODO", &home);
-                match Path::new(&legacy_todo).exists() {
-                    true => legacy_todo,
-                    false => format!("{}/.todo", &home),
+                        // Look for a legacy TODO file path
+                        let legacy_todo = format!("{}/TODO", &home);
+                        match Path::new(&legacy_todo).exists() {
+                            true => legacy_todo,
+                            false => format!("{}/.todo", &home),
+                        }
+                    }
                 }
             }
         };
@@ -137,7 +150,7 @@ impl Todo {
         if arg.len() > 1 {
             eprintln!("todo raw takes only 1 argument, not {}", arg.len())
         } else if arg.is_empty() {
-            eprintln!("todo raw takes 1 argument (done/todo)");
+            eprintln!("todo raw takes 1 argument (done/todo) in addition to the optional path");
         } else {
             let stdout = io::stdout();
             // Buffered writer for stdout stream
@@ -162,7 +175,7 @@ impl Todo {
     // Adds a new todo
     pub fn add(&self, args: &[String]) {
         if args.is_empty() {
-            eprintln!("todo add takes at least 1 argument");
+            eprintln!("todo add takes at least 1 argument in addition to the optional path");
             process::exit(1);
         }
         // Opens the TODO file with a permission to:
@@ -190,7 +203,7 @@ impl Todo {
     // Removes a task
     pub fn remove(&self, args: &[String]) {
         if args.is_empty() {
-            eprintln!("todo rm takes at least 1 argument");
+            eprintln!("todo rm takes at least 1 argument in addition to the optional path");
             process::exit(1);
         }
         // Opens the TODO file with a permission to:
@@ -275,7 +288,7 @@ impl Todo {
 
     pub fn done(&self, args: &[String]) {
         if args.is_empty() {
-            eprintln!("todo done takes at least 1 argument");
+            eprintln!("todo done takes at least 1 argument in addition to the optional path");
             process::exit(1);
         }
         
@@ -362,6 +375,10 @@ Available commands:
     - raw [todo/done]
         prints nothing but done/incompleted tasks in plain text, useful for scripting
         Example: todo raw done
+Available arguments:
+    --path
+        Specifies the path where the todo file is located. Must be the directory of the todo file.
+        Example: todo list --path='/home/user/project'
 ";
 pub fn help() {
     // For readability
